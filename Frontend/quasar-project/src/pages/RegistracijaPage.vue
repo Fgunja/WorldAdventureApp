@@ -1,76 +1,68 @@
 <template>
   <q-page class="flex flex-center">
-    <q-card>
-      <q-card-section>
-        <div class="text-h6">Registracija</div>
-      </q-card-section>
-
-      <q-card-section>
-        <q-form @submit.prevent="submitForm">
-          <!-- Polje za ime -->
-          <q-input v-model="ime" label="Ime" filled required />
-
-          <!-- Polje za prezime -->
-          <q-input v-model="prezime" label="Prezime" filled required />
-
-          <!-- Polje za korisničko ime -->
-          <q-input v-model="korime" label="Korisničko ime" filled required />
-
-          <!-- Polje za lozinku -->
-          <q-input
-            v-model="lozinka"
-            label="Lozinka"
-            type="password"
-            filled
-            required
-          />
-
-          <q-btn
-            type="submit"
-            label="Registriraj se"
-            color="primary"
-            class="full-width"
-          />
-        </q-form>
-      </q-card-section>
-    </q-card>
+    <q-form
+      @submit.prevent="registerUser"
+      class="q-gutter-md"
+      :loading="loading"
+    >
+      <q-input v-model="ime" label="Ime" required />
+      <q-input v-model="prezime" label="Prezime" required />
+      <q-input v-model="korime" label="Korisničko ime" required />
+      <q-input v-model="lozinka" label="Lozinka" type="password" required />
+      <q-btn type="submit" label="Registriraj se" color="primary" />
+    </q-form>
+    <q-banner v-if="errorMessage" color="negative" class="q-mt-md">
+      {{ errorMessage }}
+    </q-banner>
   </q-page>
 </template>
 
 <script>
+import { ref } from "vue";
+import axios from "axios";
+
 export default {
-  data() {
-    return {
-      ime: "", // Polje za ime
-      prezime: "", // Polje za prezime
-      korime: "", // Polje za korisničko ime
-      lozinka: "", // Polje za lozinku
-    };
-  },
-  methods: {
-    async submitForm() {
+  name: "RegisteracijaPage",
+  setup() {
+    const ime = ref("");
+    const prezime = ref("");
+    const korime = ref("");
+    const lozinka = ref("");
+    const loading = ref(false);
+    const errorMessage = ref("");
+
+    const registerUser = async () => {
+      loading.value = true;
+      errorMessage.value = "";
+
       try {
-        const response = await this.$axios.post(
-          "http://localhost:6666/api/registracija", // Endpoint vašeg backend servera
+        const response = await axios.post(
+          "http://localhost:6666/api/registracija",
           {
-            ime: this.ime,
-            prezime: this.prezime,
-            korime: this.korime, // Korisničko ime umjesto e-maila
-            lozinka: this.lozinka, // Lozinka korisnika
+            ime: ime.value,
+            prezime: prezime.value,
+            korime: korime.value,
+            lozinka: lozinka.value,
           }
         );
-
-        // Ako je registracija uspješna
         alert(response.data.message);
       } catch (error) {
-        // Obrada grešaka
-        if (error.response) {
-          alert(error.response.data.message || "Došlo je do pogreške.");
-        } else {
-          alert("Greška prilikom povezivanja s serverom.");
-        }
+        errorMessage.value =
+          error.response?.data?.message || "Došlo je do greške!";
+      } finally {
+        loading.value = false;
       }
-    },
+    };
+
+    return {
+      ime,
+      prezime,
+      korime,
+      lozinka,
+      loading,
+      errorMessage,
+      registerUser,
+    };
   },
 };
 </script>
@@ -78,6 +70,6 @@ export default {
 <style scoped>
 .q-page {
   max-width: 400px;
-  margin: 0 auto;
+  width: 100%;
 }
 </style>
